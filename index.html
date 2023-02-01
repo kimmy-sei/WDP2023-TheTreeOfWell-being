@@ -1,1 +1,340 @@
-hello
+<!-- Copyright 2010-2023 Mike Bostock
+
+Permission to use, copy, modify, and/or distribute this software for any purpose
+with or without fee is hereby granted, provided that the above copyright notice
+and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+THIS SOFTWARE.  -->
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+
+<head>
+  <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+  <div class="main">
+
+
+    <div class="svg_area"></div>
+
+
+
+    <div class="description">
+
+      <input id="block-01" type="checkbox" class="toggle" checked>
+      <label class="Label" for="block-01">The Tree of Well-being</label>
+      <div class="content">
+        <p>
+          A hierarchical clustering analysis of 174 countries was performed using 31 indicators, and the structure is
+          represented in the form of a tree.
+        </p>
+        <p>The flowers on the branches are painted with three indicators of wellbeing for each country. </p>
+        <p>Which countries will bloom next?</p>
+        <hr>
+        <p>Click a flower : View detailed data<br>
+          Scroll : Zoom<br>
+          Drag : Move
+        </p>
+        <p></p>
+        <hr>
+        <p>note: This page does not support mobile devices. Please view on a PC. </p>
+        <div class="license"> <a href="license.html">License</a></div>
+
+        </p>
+      </div>
+      <button id='resetButton'>Reset zoom</button>
+    </div>
+  </div>
+
+
+
+
+  <div class="detail">
+    <h2 class="countryName-text"></h2>
+    <h5>for a flower</h5>
+    <p class="wellbeing-linear">
+      <-- Min ・・・・・・・・・ Max-->
+    </p>
+    <div class="wellbeing-text"></div>
+
+
+    <h5>for a tree</h5>
+    <p class="detail-linear">
+      <-- Min ・・・・・・・・ Max-->
+    </p>
+    <div class="detail-text"></div>
+
+
+  </div>
+
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <!-- Function for radial charts -->
+  <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3-scale-radial.js"></script>
+
+  <script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+
+  <script type="module">
+    import NodePlotter from './modules/NodePlotter.js'
+    const params = {
+      thickness: 10,
+      length: 1,
+      maxThick: 10,
+      thickCoef: 0.3
+    }
+
+
+
+
+    d3.csv("data/origin-exYears.csv", function (error, csv_data) {
+      // エラー処理
+      if (error != null) {
+        return;
+      }
+      d3.json("data/d3-dendrogram_0129.json", function (error, json_data) {
+
+        if (error) throw error;
+
+        var main_element = document.getElementsByClassName("svg_area")[0];
+        var width = main_element.clientWidth;
+        var height = window.innerHeight;
+
+        // var width = 920, height = 1050;
+
+
+        var svg = d3.select(".main").append("svg")
+          .attr("width", width)
+          .attr("height", height)
+          .append("g")
+
+        // 背景用rect（ズームインアウトをノード以外でも有効にするため）
+        svg.append("rect")
+          .attr("x", -1000) // 開始x座標
+          .attr("y", -1000) // 開始y座標
+          .attr("width", 3000) // 横幅
+          .attr("height", 3000) // 縦幅
+          .attr("fill", "#ffffff00")　// 長方形の中の色
+          .on("click", function () {
+            //ハイライトを消す
+            d3.selectAll(".selected").classed("selected", false);
+            //detailパネルを消す
+            const detail = document.getElementsByClassName("detail")[0];
+            detail.style.display = "none";
+          });
+
+        var padding = 30;
+        var smaller_width = width - padding * 2;
+        var smaller_height = height - padding;// - padding * 2;
+
+        var root = d3.hierarchy(json_data);
+        var tree = d3.tree().size([smaller_width, smaller_height]);//v4
+        tree(root);
+        var nodes = root.descendants()
+        var links = root.links();
+
+        // リンクを生成
+        var link = svg.selectAll(".link")
+          .data(links)
+          .enter().append("path")
+          .attr("class", "link")
+          .attr("d",
+            d3.linkVertical()
+              .x(function (d) { return d.x + padding; })
+              .y(function (d) {
+                var newY = height - d.y;//- padding;
+                return newY;
+              }))
+          .attr("stroke", function (d) {
+            var name = d.target.data.name;
+            var targetStr = "-";
+            var count = (name.match(new RegExp(targetStr, "g")) || []).length + 1;
+            var col_num = 255 * (1 - (Math.floor(count / 60) + 1.5) / 5);
+            var col = "rgb(" + 50 + "," + col_num + "," + col_num * 0.8 + ")"
+
+
+            return col;
+
+          })
+          .attr("stroke-width", function (d) {
+            //配下のこの数をnameの-の数で導く
+            var name = d.target.data.name;
+            var targetStr = "-";
+            var count = (name.match(new RegExp(targetStr, "g")) || []).length + 1;
+            var s_width = Math.floor(count / 8) + 1;
+            return s_width;
+          });
+
+        // ノードを生成
+        var node = svg.selectAll(".node")
+          .data(nodes)
+          .enter().append("g")
+          .attr("class", "node")
+          .attr("transform", function (d) {
+            var newX = d.x + padding;
+            var newY = height - d.y;//- padding;
+            return "translate(" + newX + "," + newY + ")";
+          })
+
+        // ノードの描画
+        var innerRadius = 5, outerRadius = 20, sum = 3, color = "255,80,100";
+        NodePlotter.addCircllerPlot(0, "happy planet index : 2019", color, node, innerRadius, outerRadius, sum, csv_data, padding, height)
+        NodePlotter.addCircllerPlot(1, "human development index : 2021", color, node, innerRadius, outerRadius, sum, csv_data, padding, height)
+        NodePlotter.addCircllerPlot(2, "sustainable economic development assessment (SEDA) : 2018", color, node, innerRadius, outerRadius, sum, csv_data, padding, height)
+
+        //クリックイベント用の透明オブジェクト
+        node.append("circle")
+          .attr("class", "limit-scale")//ズームした時サイズをキープ
+          .filter(function (d) { return !d.children; })
+          .attr("fill", "#ffffff00")
+          .attr("stroke", "rgba(241, 243, 244,0.5)")//背景色と合わせる
+          .attr("r", outerRadius)
+          //ホバーイベント
+          .on("mouseover", function (d) {
+            d3.select(this).classed("mouseover", true);
+          })
+          .on("mouseout", function (d) {
+            d3.select(this).classed("mouseover", false);
+          })
+          //クリックイベント
+          .on("click", function (d, idx, elem) {
+            // ハイライト
+            d3.selectAll(".selected").classed("selected", false);
+            d3.select(this).classed("selected", true);
+
+            // detail用
+            // detailパネル表示
+            const detail = document.getElementsByClassName("detail")[0];
+            detail.style.display = "block";
+
+            var foundData = csv_data.find(element => element.indicator === d.data.name);
+            var minData = csv_data.find(element => element.indicator === "Min");
+            var maxData = csv_data.find(element => element.indicator === "Max");
+
+            //detailに追加
+            var wellbeing_text_element = document.getElementsByClassName("wellbeing-text")[0];
+            wellbeing_text_element.innerHTML = "";
+            var detail_text_element = document.getElementsByClassName("detail-text")[0];
+            detail_text_element.innerHTML = "";
+            var countryName_element = document.getElementsByClassName("countryName-text")[0];
+            countryName_element.innerHTML = "";
+
+            for (const [key, value] of Object.entries(foundData)) {
+
+              if (key == "indicator") {
+                countryName_element.innerHTML = value;
+                continue;
+              }
+              if (key == "ISO Country code") {
+                countryName_element.innerHTML += " ( " + value + " )";
+                continue;
+              }
+
+              //正規化したいろでdetailに色付け
+              // 0から1の間にスケールする
+              var min = parseFloat(minData[key].replace(/,/g, ""))//カンマ区切りの文字列から数字に直して最小値取得
+              var max = parseFloat(maxData[key].replace(/,/g, ""))//カンマ区切りの文字列から数字に直して最大値取得
+              var scaleData = d3.scaleLinear()
+                .domain([min, max])
+                .range([0.3, 0.7]);
+
+              var scaleValue = scaleData(parseFloat(value.replace(/,/g, "")));//カンマ区切りの文字列から数字に直してスケールした値取得
+              var targetDiv, col;
+
+              var r, g, b;
+              if (key == "happy planet index : 2019" || key == "human development index : 2021" || key == "sustainable economic development assessment (SEDA) : 2018") {
+                targetDiv = wellbeing_text_element;
+
+                col = "rgba(255,80,100," + scaleValue + ")";
+              } else {
+                targetDiv = detail_text_element;
+                col = "rgba(" + r + "," + g + "," + b + ",1)";
+                if (scaleValue) {
+                  // col = d3.interpolatePuOr(scaleValue)
+                  col = d3.interpolateBrBG(scaleValue)
+                } else {
+                  col = "rgb(120, 120, 120)"
+                }
+
+              }
+
+
+
+              var new_element = document.createElement('p');
+              new_element.style.backgroundColor = col;
+              var valueStr = String(key) + " = " + String(value);
+              new_element.innerHTML = valueStr;
+              targetDiv.appendChild(new_element);
+
+            }
+          });
+
+
+
+        // 国名のラベルを貼る
+        node.append("text")
+          .filter(function (d) { return !d.children; })
+          // .attr("dx", function (d) { return d.x < width / 2 ? 8 : -8; })
+          .attr("dy", 16)
+          .attr("class", "limit-scale")//ズームした時サイズをキープ
+          .style("text-anchor", "middle")
+          .text(function (d) { //ISOのコードで表示
+            var foundData = csv_data.find(element => element.indicator === d.data.name);
+            return foundData["ISO Country code"];
+          });
+
+        //ズームの実装
+        // Define the zoom behavior
+        // https://wizardace.com/d3-zoom/
+        var zoom = d3.zoom()
+          .scaleExtent([1, 40])
+          .translateExtent([
+            [-800, -200],
+            [width + 800, height + 200]
+          ])
+          .on("zoom", zoomed);
+
+        // Apply the zoom behavior to the svg element
+        svg.call(zoom);
+
+        const MAX_SCALE = 1;
+        // Define the zoomed function
+        function zoomed() {
+          svg.attr("transform", d3.event.transform);
+          let currentScale = d3.event.transform.k;
+          if (currentScale > MAX_SCALE) {
+            d3.selectAll(".limit-scale")
+              .attr("transform", "scale(" + (MAX_SCALE / currentScale) + ")");
+          }
+        }
+
+        // Set the initial zoom state
+        zoom.transform(svg, d3.zoomIdentity);
+        console.log(zoom)
+
+        d3.select("#resetButton")
+          .on("click", resetted);
+        function resetted() {
+          svg.transition()
+            .duration(750)
+            .call(zoom.transform, d3.zoomIdentity);
+        }
+
+        d3.select(self.frameElement).style("height", height + "px");
+      });
+
+
+    });
+
+
+  </script>

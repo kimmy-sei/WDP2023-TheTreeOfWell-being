@@ -1,0 +1,248 @@
+@charset "UTF-8";
+/* d3.js */
+
+
+.node {
+    font: 10px sans-serif;
+
+}
+
+.link {
+    fill: none;
+    /* stroke: #ccc; */
+    /* stroke-width: 1.5px; */
+}
+
+/* .gradient{
+    background: linear-gradient(blue, pink);
+  } */
+
+/* ハイライト */
+.mouseover {
+    fill: rgba(255, 255, 255, 0.422);
+    /* background: linear-gradient(blue, pink); */
+}
+
+.selected {
+
+    stroke: rgb(255, 255, 255);
+    stroke-width: 2px;
+
+}
+
+
+/* detailの文字色 */
+
+.missing {
+    color: rgb(90, 90, 90);
+}
+
+.eqr-avrg {
+    color: white;
+}
+
+.upper-avrg {
+    color: red;
+}
+
+.lower-avrg {
+    color: blue;
+}
+
+/* html */
+body {
+    overflow: hidden;
+
+    margin: 0;
+}
+
+.main {
+    background-size: cover;
+    background-color: rgb(210, 210, 210);
+    background-blend-mode: hard-light;
+    mix-blend-mode: hard-light;
+    background-image: url(img/texture.jpg);
+}
+
+.license {
+
+    font: 12px sans-serif;
+}
+
+#resetButton {
+    left: 2vw;
+    top: vh;
+    z-index: 1;
+    font: 12px sans-serif;
+    color: rgb(0, 0, 0);
+    border: 0.5px solid;
+    background: rgba(241, 243, 244, 0.276);
+    backdrop-filter: blur(12px);
+    border: 0.5px solid #6d5d00;
+}
+
+.description {
+    position: absolute;
+    width: 32vw;
+}
+
+.description>h1 {
+    font-size: 16px;
+}
+
+.description> {
+    font-size: 12px;
+
+}
+hr{
+    height: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-top: 0.5px solid #6d5d00;
+    
+}
+
+/* from https://www.omakase.net/blog/2022/05/css-accordion.html */
+.toggle {
+    display: none;
+}
+
+.Label {
+    /*タイトル*/
+    padding: 1em;
+    display: block;
+    color: rgb(0, 0, 0);
+    border: 0.5px solid;
+    background: rgba(241, 243, 244, 0.276);
+    backdrop-filter: blur(12px);
+    border-top-color: rgb(0, 0, 0, 0);
+    border-left-color: rgb(0, 0, 0, 0);
+    border-bottom-color:#6d5d00;
+    border-right-color: rgb(0, 0, 0, 0);
+    width:200px
+}
+
+.Label::before {
+    /*タイトル横の矢印*/
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-top: 1px solid #6d5d00;
+    border-right: 1px solid #6d5d00;
+    -webkit-transform: rotate(45deg);
+    position: absolute;
+    top: calc(50% - 3px);
+    right: 20px;
+    transform: rotate(135deg);
+}
+
+.Label,
+.content {
+    font-size: 14px;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    transition: all 0.3s;
+}
+
+.content {
+    /*本文*/
+    height: 0;
+    margin-bottom: 10px;
+    padding: 0 16px;
+    overflow: hidden;
+    background: rgba(241, 243, 244, 0.276);
+    backdrop-filter: blur(12px);
+}
+
+.toggle:checked+.Label+.content {
+    /*開閉時*/
+    height: auto;
+    padding: 20px;
+    transition: all .3s;
+}
+
+.toggle:checked+.Label::before {
+    transform: rotate(-45deg) !important;
+}
+
+.detail {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    background: rgba(241, 243, 244, 0.276);
+    backdrop-filter: blur(12px);
+    padding: 16px;
+    width: 480px;
+    height: 100vh;
+    overflow: scroll;
+    display: none;
+}
+
+.wellbeing-text {
+    color: rgba(0, 0, 0, 0.885);
+    font-size: 11px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.wellbeing-text>p {
+    backdrop-filter: blur(12px);
+
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-left: 8px;
+}
+
+.detail-text {
+    color: rgba(0, 0, 0, 0.885);
+    font-size: 11px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.detail-text>p {
+    backdrop-filter: blur(12px);
+
+
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-left: 8px;
+}
+
+
+
+h2 {
+
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+h5 {
+
+    margin-top: 16px;
+    margin-bottom: 8px;
+
+}
+
+.left {
+    float: left;
+}
+
+.wellbeing-linear {
+    font-size: 11px;
+    background: linear-gradient(to right, rgb(255, 80, 100, 0), rgb(255, 80, 100, 1));
+    text-align: center;
+    margin-bottom: 8px;
+
+}
+
+.detail-linear {
+    font-size: 11px;
+    background: linear-gradient(to right, rgb(221, 190, 120), white, rgb(126, 200, 190));
+    text-align: center;
+    margin-top: 0px;
+    margin-bottom: 8px;
+
+}
